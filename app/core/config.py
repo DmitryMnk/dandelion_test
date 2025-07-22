@@ -146,6 +146,7 @@ class RedisSettings(BaseSettings):
     CACHE_API_DB: int = 0
     CELERY_BACKEND_DB: int = 1
     REPOSITORY_DB: int = 2
+    CACHE_TTL_SEC: int = 60
 
     def _get_connection_part_url(self) -> str:
         """Базовая строка подключения без номре бд."""
