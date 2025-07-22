@@ -1,0 +1,12 @@
+FROM python:3.12.9-alpine3.21
+
+COPY pyproject.toml  .
+COPY ./app /app
+WORKDIR /app
+
+
+RUN pip install -U pip
+RUN pip install poetry
+RUN poetry install --no-root --without dev
+
+CMD gunicorn --workers 1 --forwarded-allow-ips='*' --worker-class uvicorn.workers.UvicornWorker main:app --bind 0.0.0.0:${HTTP_USERS_PORT}

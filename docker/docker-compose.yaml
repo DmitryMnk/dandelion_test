@@ -1,0 +1,66 @@
+networks:
+  dandelion-network:
+    name: dandelion-network
+    driver: bridge
+
+
+services:
+
+  app_redis:
+    container_name: ${APP_PROJECT_PREFIX}-redis
+    hostname: ${REDIS_HOST}
+    restart: always
+    build:
+      context: ..
+      dockerfile: ./docker/containers/redis/Dockerfile
+    ports:
+      - "${REDIS_PORT}:${REDIS_PORT}"
+    env_file:
+      - .env
+    networks:
+      - dandelion-network
+    volumes:
+      - ./data/redis:/data
+      - ./containers/redis/redis.conf:/usr/local/etc/redis/redis.conf
+    command: ['redis-server', '/usr/local/etc/redis/redis.conf']
+
+  dandelion_psql:
+    container_name: ${APP_PROJECT_PREFIX}-psql
+    hostname: ${POSTGRES_HOST}
+    restart: always
+    build:
+      context: ..
+      dockerfile: ./docker/containers/pgsql/Dockerfile
+    ports:
+      - "${POSTGRES_PORT}:${POSTGRES_PORT}"
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_NAME}
+    env_file:
+      - .env
+    networks:
+      - dandelion-network
+    volumes:
+      - ./data/pgsql:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    command: ["postgres", "-c", "port=${POSTGRES_PORT}"]
+
+  app_api:
+    container_name: ${APP_PROJECT_PREFIX}-api
+    build:
+      context: ..
+      dockerfile: ./docker/containers/api/Dockerfile
+    restart: always
+    ports:
+      - "${APP_HTTP_PORT}:${APP_HTTP_PORT}"
+    networks:
+      - dandelion-network
+
+    depends_on:
+      - dandelion_psql
+    volumes:
+      - ../app:/app
+    env_file:
+      - .env
+    command: sh -c "uvicorn main:app --host 0.0.0.0 --port ${APP_HTTP_PORT} --reload"
