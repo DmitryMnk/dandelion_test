@@ -35,7 +35,7 @@ def upgrade() -> None:
         sa.Column(
             "event_type", sa.String(length=32), nullable=False, comment="Тип события"
         ),
-        sa.Column("details", sa.JSON(), nullable=True),
+        sa.Column("details", sa.JSON(), nullable=False),
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.Column("id", sa.Integer(), nullable=False),
         sa.PrimaryKeyConstraint("id"),

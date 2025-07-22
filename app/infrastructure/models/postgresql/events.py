@@ -24,7 +24,7 @@ class Event(ABCModel):
 
     details: Mapped[dict] = mapped_column(
         JSON,
-        nullable=True,
+        nullable=False,
     )
 
     created_at: Mapped[datetime.datetime] = mapped_column(
