@@ -1,10 +1,10 @@
-from typing import Any, Generic, List, Type, TypeVar
+from typing import Any, Dict, Generic, List, Type, TypeVar
 
-from sqlalchemy import delete
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.roles import ExpressionElementRole
 
-from infrastructure.models import ABCModel
+from infrastructure.models.postgresql import ABCModel
 from infrastructure.schemas import ABCSchema
 
 M = TypeVar("M", bound=ABCModel)
@@ -81,3 +81,13 @@ class ABCRepository(Generic[M]):
         """
         stmt = delete(self.model).filter(*filters)
         await self.session.execute(stmt)
+
+    async def check_existing(self, params: Dict[str, Any]) -> bool:
+        """Метод проверяет аличие моделей по переданным праметрам.
+
+        :param params: Параметры для фильтрации.
+        :return: True - записи есть, False - записи отсутствуют.
+        """
+        query = select(self.model).filter_by(**params)
+        result = await self.session.execute(query)
+        return result.first() is not None

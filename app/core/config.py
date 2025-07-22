@@ -144,6 +144,20 @@ class RedisSettings(BaseSettings):
     PORT: int = 6379
     PASSWORD: str = "redis"
     CACHE_API_DB: int = 0
+    CELERY_BACKEND_DB: int = 1
+    REPOSITORY_DB: int = 2
+
+    def _get_connection_part_url(self) -> str:
+        """Базовая строка подключения без номре бд."""
+        return f"redis://:{self.PASSWORD}@{self.HOST}:{self.PORT}/"
+
+    @property
+    def celery_backend_connection_url(self) -> str:
+        """Возвращает строку подключения к редис для Celery backend.
+
+        :return: строка подключения.
+        """
+        return self._get_connection_part_url() + f"{self.CELERY_BACKEND_DB}"
 
 
 class AppSettings(BaseSettings):

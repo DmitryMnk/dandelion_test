@@ -59,8 +59,26 @@ services:
 
     depends_on:
       - dandelion_psql
+      - app_redis
     volumes:
       - ../app:/app
     env_file:
       - .env
-    command: sh -c "uvicorn main:app --host 0.0.0.0 --port ${APP_HTTP_PORT} --reload"
+    command: sh -c "alembic upgrade head || { echo 'Alembic migration failed'; exit 1; } &&
+          uvicorn main:app --host 0.0.0.0 --port ${APP_HTTP_PORT} --reload"
+
+  app_worker:
+    container_name: ${APP_PROJECT_PREFIX}-worker
+    build:
+      context: ..
+      dockerfile: ./docker/containers/api/Dockerfile
+    depends_on:
+      - app_api
+      - app_redis
+    env_file:
+      - .env
+    networks:
+      - dandelion-network
+    volumes:
+      - ../app:/app
+    command: celery -A services.celery.app.celery_app worker --loglevel=info
